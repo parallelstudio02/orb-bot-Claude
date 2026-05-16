@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORB Signal Bot</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #ebebea;
+    --text: #1a1a1a;
+    --text2: #6b6b6b;
+    --text3: #9b9b9b;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --green-mid: #639922;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --blue: #185FA5;
+    --blue-bg: #E6F1FB;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1c;
+      --bg2: #282828;
+      --bg3: #333333;
+      --text: #f0f0f0;
+      --text2: #a0a0a0;
+      --text3: #6a6a6a;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.2);
+      --green: #97C459;
+      --green-bg: #1a2e0a;
+      --green-mid: #639922;
+      --red: #F09595;
+      --red-bg: #2e0a0a;
+      --amber: #EF9F27;
+      --amber-bg: #2e1e0a;
+      --blue: #85B7EB;
+      --blue-bg: #0a1e2e;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg2);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 16px;
+  }
+
+  .container { max-width: 680px; margin: 0 auto; }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .header-title { font-size: 18px; font-weight: 600; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .clock { font-size: 13px; color: var(--text3); font-variant-numeric: tabular-nums; }
+
+  .nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--bg3);
+    padding: 4px;
+    border-radius: var(--radius-lg);
+  }
+
+  .nav-btn {
+    flex: 1;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .nav-btn.active {
+    background: var(--bg);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .card {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+
+  .stat {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+
+  .stat .label { margin-bottom: 5px; }
+  .stat-val { font-size: 20px; font-weight: 600; color: var(--text); }
+  .stat-val.pos { color: var(--green); }
+  .stat-val.neg { color: var(--red); }
+
+  .mood-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+
+  .mood-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .mood-green { background: var(--green-mid); }
+  .mood-red { background: var(--red); }
+  .mood-amber { background: var(--amber); }
+
+  .sig-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+
+  .sig-tab {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 999px;
+    cursor: pointer;
+    border: 0.5px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    transition: all 0.12s;
+  }
+
+  .sig-tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .sig-tab.traded { background: var(--green-bg); color: var(--green); border-color: var(--green-mid); }
+  .sig-tab.skipped { opacity: 0.4; }
+  .sig-tab.inplay { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+
+  .score-pill {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .s5, .s4 { background: var(--green-bg); color: var(--green); }
+  .s3 { background: var(--amber-bg); color: var(--amber); }
+  .s2, .s1 { background: var(--red-bg); color: var(--red); }
+
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+
+  .price-box {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+
+  .price-box .label { margin-bottom: 4px; }
+  .price-val { font-size: 17px; font-weight: 600; }
+  .price-val.entry { color: var(--blue); }
+  .price-val.stop { color: var(--red); }
+  .price-val.target { color: var(--green); }
+  .price-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+  .cond-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+
+  .cond {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+
+  .cond.y { background: var(--green-bg); color: var(--green); }
+  .cond.n { background: var(--bg2); color: var(--text3); }
+
+  .news-box {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+    border-left: 2px solid var(--border2);
+    padding: 4px 10px;
+    margin-bottom: 14px;
+  }
+
+  .btn-row { display: flex; gap: 8px; }
+
+  .btn-enter {
+    flex: 1;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--blue);
+    color: #fff;
+    transition: opacity 0.15s;
+  }
+
+  .btn-enter:disabled {
+    background: var(--bg3);
+    color: var(--text3);
+    cursor: not-allowed;
+  }
+
+  .btn-exit {
+    flex: 1;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--red);
+    color: #fff;
+  }
+
+  .btn-neutral {
+    padding: 11px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border2);
+    background: transparent;
+    color: var(--text);
+  }
+
+  .banner {
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+  }
+
+  .banner.amber { background: var(--amber-bg); color: var(--amber); }
+  .banner.red { background: var(--red-bg); color: var(--red); }
+  .banner.green { background: var(--green-bg); color: var(--green); }
+  .banner.blue { background: var(--blue-bg); color: var(--blue); }
+
+  .exit-form {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .exit-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+
+  input[type="number"], input[type="text"] {
+    flex: 1;
+    font-size: 14px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border2);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    width: 100%;
+  }
+
+  input:focus { border-color: var(--blue); }
+
+  .confirm-btn {
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius);
+    border: none;
+    background: var(--text);
+    color: var(--bg);
+    white-space: nowrap;
+  }
+
+  .timer-bar { height: 3px; background: var(--bg3); border-radius: 2px; margin-bottom: 14px; overflow: hidden; }
+  .timer-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width 1s linear; }
+
+  .traded-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--green-bg);
+    color: var(--green);
+    margin-bottom: 10px;
+  }
+
+  .skipped-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--bg2);
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  .hist-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .hist-row:last-child { border-bottom: none; }
+  .hist-ticker { font-size: 14px; font-weight: 600; color: var(--text); }
+  .hist-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .hist-pnl { font-size: 15px; font-weight: 600; }
+  .hist-pnl.pos { color: var(--green); }
+  .hist-pnl.neg { color: var(--red); }
+
+  .refresh-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+  .analysis-box {
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 12px;
+  }
+
+  .analysis-box .label { margin-bottom: 6px; }
+  .analysis-val { font-size: 22px; font-weight: 600; color: var(--text); }
+  .analysis-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+  .streak-bar { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+
+  .streak-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+  }
+
+  .streak-w { background: var(--green-bg); color: var(--green); }
+  .streak-l { background: var(--red-bg); color: var(--red); }
+
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .checklist-item:last-of-type { border-bottom: none; }
+
+  .check-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 1.5px solid var(--border2);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+    font-size: 13px;
+  }
+
+  .check-box.checked { background: var(--green-mid); border-color: var(--green-mid); color: #fff; }
+
+  .check-label { font-size: 13px; color: var(--text); line-height: 1.5; }
+  .check-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .checklist-score {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg2);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  .verdict { font-size: 12px; margin-top: 3px; font-weight: 500; }
+  .verdict.go { color: var(--green); }
+  .verdict.maybe { color: var(--amber); }
+  .verdict.no { color: var(--red); }
+
+  .history-session {
+    border-bottom: 0.5px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+
+  .history-session:last-child { border-bottom: none; margin-bottom: 0; }
+
+  .session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .session-date { font-size: 13px; font-weight: 600; color: var(--text); }
+  .session-pnl { font-size: 14px; font-weight: 600; }
+
+  .ruin-bar {
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .ruin-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  @media (max-width: 480px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .price-grid { grid-template-columns: repeat(3, 1fr); }
+    .analysis-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <div class="header-title">ORB Signal Bot</div>
+      <div class="header-sub">$1,000 capital · $30 max loss · 1:2 R/R</div>
+    </div>
+    <div id="clock" class="clock"></div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPage('scanner')">Scanner</button>
+    <button class="nav-btn" onclick="showPage('checklist')">Pre-session</button>
+    <button class="nav-btn" onclick="showPage('analysis')">Analysis</button>
+    <button class="nav-btn" onclick="showPage('history')">History</button>
+  </div>
+
+  <div id="page-scanner" class="page active">
+
+    <div class="stat-grid">
+      <div class="stat"><div class="label">Session P&L</div><div class="stat-val" id="s-pnl">$0.00</div></div>
+      <div class="stat"><div class="label">Capital left</div><div class="stat-val" id="s-cap">$1,000</div></div>
+      <div class="stat"><div class="label">Wins</div><div class="stat-val pos" id="s-wins">0</div></div>
+      <div class="stat"><div class="label">Losses</div><div class="stat-val neg" id="s-loss">0</div></div>
+    </div>
+
+    <div class="mood-bar" id="mood-bar">
+      <div class="mood-dot mood-green" id="mood-dot"></div>
+      <div id="mood-text" style="font-size:13px;color:var(--text2)">Loading market conditions...</div>
+    </div>
+
+    <div class="refresh-row">
+      <div style="font-size:12px;color:var(--text3)" id="next-refresh">Auto-refresh every 5 min</div>
+      <button class="btn-neutral" onclick="doRefresh()" style="font-size:12px;padding:7px 14px">↻ Refresh now</button>
+    </div>
+
+    <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+
+    <div class="sig-tabs" id="sig-tabs"></div>
+    <div id="sig-body"></div>
+
+    <div class="card" id="hist-card" style="display:none">
+      <div class="label" style="margin-bottom:10px">Tonight's trades</div>
+      <div id="hist-list"></div>
+    </div>
+
+  </div>
+
+  <div id="page-checklist" class="page">
+    <div class="card">
+      <div class="section-title">Pre-session checklist</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;">Run through this before 9:30 PM SGT. If you cannot answer yes to all five, sit out tonight.</div>
+
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="check-box">✓</div>
+        <div>
+          <div class="check-label">I have checked SPY pre-market direction</div>
+          <div class="check-sub">SPY flat or green = ok to trade. SPY down more than 0.5% = sit out or be very selective.</div>
+        </div>
+      </div>
+
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="check-box">✓</div>
+        <div>
+          <div class="check-label">I have a clear stop loss set before entering</div>
+          <div class="check-sub">You know exactly where you will exit if wrong. Not roughly. Exactly.</div>
+        </div>
+      </div>
+
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="check-box">✓</div>
+        <div>
+          <div class="check-label">I am not tired, rushed, or emotionally off</div>
+          <div class="check-sub">Trading when stressed, tired, or anxious leads to revenge trades and panic exits.</div>
+        </div>
+      </div>
+
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="check-box">✓</div>
+        <div>
+          <div class="check-label">I am okay losing $30 tonight and not chasing it back</div>
+          <div class="check-sub">If losing $30 will affect your mood or make you overtrade, do not start tonight.</div>
+        </div>
+      </div>
+
+      <div class="checklist-item" onclick="toggleCheck(this)">
+        <div class="check-box">✓</div>
+        <div>
+          <div class="check-label">I have reviewed all 5 signals and picked my top candidate</div>
+          <div class="check-sub">You should know which stock you are watching before the bell rings. No deciding at 9:31.</div>
+        </div>
+      </div>
+
+      <div class="checklist-score">
+        <div>
+          <div class="label">Readiness</div>
+          <div class="verdict no" id="checklist-verdict">Not ready — complete the checklist</div>
+        </div>
+        <div style="font-size:24px;font-weight:600;color:var(--text)"><span id="check-count">0</span>/5</div>
+      </div>
+    </div>
+
+    <button class="btn-neutral" onclick="resetChecklist()" style="width:100%;padding:10px;font-size:13px;">Reset checklist</button>
+  </div>
+
+  <div id="page-analysis" class="page">
+
+    <div class="card">
+      <div class="section-title">Session analysis</div>
+      <div class="analysis-grid">
+        <div class="analysis-box">
+          <div class="label">Win rate</div>
+          <div class="analysis-val" id="a-wr">—</div>
+          <div class="analysis-sub" id="a-wr-sub">No trades yet</div>
+        </div>
+        <div class="analysis-box">
+          <div class="label">Avg win</div>
+          <div class="analysis-val pos" id="a-avgwin">—</div>
+          <div class="analysis-sub">Per winning trade</div>
+        </div>
+        <div class="analysis-box">
+          <div class="label">Avg loss</div>
+          <div class="analysis-val neg" id="a-avgloss">—</div>
+          <div class="analysis-sub">Per losing trade</div>
+        </div>
+        <div class="analysis-box">
+          <div class="label">Expectancy</div>
+          <div class="analysis-val" id="a-exp">—</div>
+          <div class="analysis-sub">Avg $ per trade</div>
+        </div>
+      </div>
+
+      <div class="label" style="margin-bottom:8px">Win/loss streak tonight</div>
+      <div class="streak-bar" id="streak-bar">
+        <div style="font-size:12px;color:var(--text3)">No trades yet</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Risk of ruin</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6;">
+        At $30 max loss per trade, your $1,000 capital can absorb up to <strong>33 losses</strong> before it is gone.
+        If you hit 3 losses in a row tonight, stop. Do not revenge trade.
+      </div>
+      <div class="analysis-grid">
+        <div class="analysis-box">
+          <div class="label">Capital at risk used</div>
+          <div class="analysis-val" id="a-risk-pct">0%</div>
+          <div class="analysis-sub">of starting $1,000</div>
+        </div>
+        <div class="analysis-box">
+          <div class="label">Consecutive losses</div>
+          <div class="analysis-val" id="a-consec">0</div>
+          <div class="analysis-sub" id="a-consec-sub">You are fine</div>
+        </div>
+      </div>
+      <div class="label" style="margin-bottom:6px">Capital health</div>
+      <div class="ruin-bar">
+        <div class="ruin-fill" id="ruin-fill" style="width:100%;background:var(--green-mid)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:4px">
+        <span>$0</span>
+        <span id="a-cap-label">$1,000 remaining</span>
+        <span>$1,000</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">All-time stats</div>
+      <div class="analysis-grid">
+        <div class="analysis-box">
+          <div class="label">Total sessions</div>
+          <div class="analysis-val" id="a-sessions">0</div>
+        </div>
+        <div class="analysis-box">
+          <div class="label">All-time P&L</div>
+          <div class="analysis-val" id="a-total-pnl">$0</div>
+        </div>
+        <div class="analysis-box">
+          <div class="label">All-time win rate</div>
+          <div class="analysis-val" id="a-total-wr">—</div>
+        </div>
+        <div class="analysis-box">
+          <div class="label">Total trades</div>
+          <div class="analysis-val" id="a-total-trades">0</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="page-history" class="page">
+    <div class="card">
+      <div class="section-title">Session history</div>
+      <div id="history-list">
+        <div style="text-align:center;padding:2rem;font-size:13px;color:var(--text3)">No past sessions yet. Complete a session to see your history here.</div>
+      </div>
+    </div>
+    <button class="btn-neutral" onclick="endSession()" style="width:100%;padding:11px;font-size:13px;margin-bottom:12px;">Save session and reset for tomorrow</button>
+    <button class="btn-neutral" onclick="if(confirm('This will erase all saved data. Are you sure?')) clearAllData()" style="width:100%;padding:11px;font-size:13px;color:var(--red);border-color:var(--red);">Clear all data</button>
+  </div>
+
+</div>
+
+<script>
+// ── Live data loader ──────────────────────────────────────────
+// Tries to load signals.json (generated by fetch_signals.py).
+// Falls back to sample data if file not found.
+async function loadSignalsJson() {
+  try {
+    const r = await fetch('signals.json?nocache=' + Date.now());
+    if (!r.ok) throw new Error('not found');
+    const data = await r.json();
+    if (data.signals && data.signals.length > 0) {
+      BASE_SIGNALS.length = 0;
+      data.signals.forEach(s => BASE_SIGNALS.push(s));
+      signals = BASE_SIGNALS.map(s => ({ ...s, status: 'ready' }));
+      const bar = document.getElementById('mood-bar');
+      if (bar) {
+        const tag = document.createElement('span');
+        tag.style.cssText = 'font-size:11px;background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:999px;font-weight:600;margin-left:auto;';
+        tag.textContent = 'Live data · ' + data.generated_at;
+        bar.appendChild(tag);
+      }
+      renderTabs();
+      renderSignal();
+    }
+  } catch (e) {
+    // No signals.json — using sample data, that is fine
+    const bar = document.getElementById('mood-bar');
+    if (bar) {
+      const tag = document.createElement('span');
+      tag.style.cssText = 'font-size:11px;background:var(--amber-bg);color:var(--amber);padding:2px 8px;border-radius:999px;font-weight:600;margin-left:auto;';
+      tag.textContent = 'Sample data — run fetch_signals.py for live';
+      bar.appendChild(tag);
+    }
+  }
+}
+
+const CAPITAL = 1000;
+const MAX_LOSS = 30;
+const RR = 2;
+
+const COND_LABELS = {
+  catalyst: 'News catalyst',
+  volume: 'High PM vol',
+  gap: 'Gap >2%',
+  spy: 'SPY neutral/green',
+  price: 'Price $5–$30'
+};
+
+const BASE_SIGNALS = [
+  {
+    ticker: 'HOOD', name: 'Robinhood Markets', price: 18.30, gap: 4.1,
+    pmVol: '7.8M', pmVolX: 1.9, stop: 0.35,
+    conditions: { catalyst: true, volume: true, gap: true, spy: true, price: true },
+    news: 'MAU up 34% YoY. Revenue beat by 12%. Options volume hit a record high in April.',
+    score: 5
+  },
+  {
+    ticker: 'SOFI', name: 'SoFi Technologies', price: 9.20, gap: 3.6,
+    pmVol: '5.2M', pmVolX: 1.6, stop: 0.25,
+    conditions: { catalyst: true, volume: true, gap: true, spy: true, price: true },
+    news: 'Member growth +41% YoY. Adjusted EBITDA guidance raised. Lending revenue beat estimates.',
+    score: 5
+  },
+  {
+    ticker: 'MARA', name: 'Marathon Digital Holdings', price: 22.10, gap: 3.2,
+    pmVol: '6.1M', pmVolX: 2.1, stop: 0.45,
+    conditions: { catalyst: true, volume: true, gap: true, spy: true, price: true },
+    news: 'Bitcoin hashrate hits record. April mining output up 18% month over month.',
+    score: 4
+  },
+  {
+    ticker: 'IONQ', name: 'IonQ Inc.', price: 14.80, gap: 2.4,
+    pmVol: '3.1M', pmVolX: 1.5, stop: 0.30,
+    conditions: { catalyst: true, volume: true, gap: false, spy: true, price: true },
+    news: 'Microsoft Azure partnership announced for quantum computing integration.',
+    score: 3
+  },
+  {
+    ticker: 'OPEN', name: 'Opendoor Technologies', price: 2.85, gap: 2.1,
+    pmVol: '4.8M', pmVolX: 1.3, stop: 0.12,
+    conditions: { catalyst: true, volume: false, gap: false, spy: true, price: true },
+    news: 'Q1 homes sold up 22%. Management maintained full year revenue guidance.',
+    score: 2
+  }
+];
+
+function calcPos(price, stop) {
+  const byRisk = Math.floor(MAX_LOSS / stop);
+  const byCapital = Math.floor(CAPITAL / price);
+  const sh = Math.min(byRisk, byCapital);
+  return {
+    sh,
+    cost: +(sh * price).toFixed(2),
+    actualRisk: +(sh * stop).toFixed(2),
+    maxGain: +(sh * stop * RR).toFixed(2)
+  };
+}
+
+let signals = BASE_SIGNALS.map(s => ({ ...s, status: 'ready' }));
+let activeIdx = 0;
+let inTrade = false;
+let inTradeIdx = null;
+let sessionPnl = 0;
+let capitalLeft = CAPITAL;
+let wins = 0;
+let losses = 0;
+let history = [];
+let countdown = 300;
+let consecutiveLosses = 0;
+
+function getMoodHtml() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const totalMin = h * 60 + m;
+  const openMin = 21 * 60 + 30;
+  const closeMin = 23 * 60;
+
+  if (totalMin < 21 * 60) {
+    return { dot: 'mood-amber', text: 'Pre-market. Session opens at 9:30 PM SGT. Review signals and run your checklist.' };
+  } else if (totalMin >= openMin && totalMin < closeMin) {
+    const mins = totalMin - openMin;
+    if (mins < 15) return { dot: 'mood-green', text: 'Market open — first 15 min. Price discovery phase. Wait for opening range to form.' };
+    if (mins < 60) return { dot: 'mood-green', text: 'Prime window. Opening range established. Best time to enter breakout setups.' };
+    return { dot: 'mood-amber', text: 'Late session. Volatility dropping. Be selective. Only trade if setup is very clean.' };
+  } else if (totalMin >= closeMin) {
+    return { dot: 'mood-red', text: 'Session closed. Save your session in the History tab and review your trades.' };
+  }
+  return { dot: 'mood-amber', text: 'Check SPY direction before entering any trade tonight.' };
+}
+
+function renderMood() {
+  const mood = getMoodHtml();
+  const dot = document.getElementById('mood-dot');
+  const text = document.getElementById('mood-text');
+  dot.className = 'mood-dot ' + mood.dot;
+  text.textContent = mood.text;
+}
+
+function renderTabs() {
+  document.getElementById('sig-tabs').innerHTML = signals.map((s, i) => {
+    let cls = 'sig-tab';
+    if (i === activeIdx) cls += ' active';
+    else if (s.status === 'traded') cls += ' traded';
+    else if (s.status === 'skipped') cls += ' skipped';
+    else if (s.status === 'inplay') cls += ' inplay';
+    return `<button class="${cls}" onclick="switchSig(${i})">${s.ticker}</button>`;
+  }).join('');
+}
+
+function switchSig(i) {
+  activeIdx = i;
+  renderTabs();
+  renderSignal();
+}
+
+function renderSignal() {
+  const s = signals[activeIdx];
+  const { sh, cost, actualRisk, maxGain } = calcPos(s.price, s.stop);
+  const entry = s.price;
+  const stopPrice = +(entry - s.stop).toFixed(2);
+  const target = +(entry + s.stop * RR).toFixed(2);
+
+  const condHtml = Object.entries(s.conditions).map(([k, v]) =>
+    `<span class="cond ${v ? 'y' : 'n'}">${v ? '✓' : '✗'} ${COND_LABELS[k]}</span>`
+  ).join('');
+
+  let topBadge = '';
+  if (s.status === 'traded') topBadge = `<div class="traded-badge">✓ Already traded tonight</div>`;
+  if (s.status === 'skipped') topBadge = `<div class="skipped-badge">Skipped — tap Unskip to reconsider</div>`;
+
+  let topBanner = '';
+  if (inTrade && inTradeIdx === activeIdx) {
+    topBanner = `<div class="banner amber">⚡ You are in this trade right now. Exit below when done.</div>`;
+  } else if (inTrade) {
+    topBanner = `<div class="banner amber">🔒 Exit your ${signals[inTradeIdx].ticker} trade first before entering a new one.</div>`;
+  }
+
+  const canAfford = cost <= capitalLeft;
+  if (!canAfford && !inTrade) {
+    topBanner += `<div class="banner red">Not enough capital. This trade costs $${cost.toFixed(0)} but you have $${capitalLeft.toFixed(0)} left.</div>`;
+  }
+
+  if (s.score <= 2) {
+    topBanner += `<div class="banner red">Low score setup. Score 2/5 — high risk of failure. Consider skipping.</div>`;
+  } else if (s.score === 3) {
+    topBanner += `<div class="banner amber">Marginal setup. Score 3/5 — trade with smaller conviction. Make sure SPY is strong.</div>`;
+  }
+
+  if (consecutiveLosses >= 3) {
+    topBanner += `<div class="banner red">⚠️ You have lost ${consecutiveLosses} trades in a row. Stop trading tonight. Do not chase losses.</div>`;
+  }
+
+  let actionHtml = '';
+  if (inTrade && inTradeIdx === activeIdx) {
+    actionHtml = `
+      <div class="exit-form">
+        <div class="label">Your actual exit price</div>
+        <div style="font-size:11px;color:var(--text3);margin:4px 0 8px;">Leave blank to record at target price $${target.toFixed(2)}</div>
+        <div class="exit-row">
+          <input type="number" id="exit-price" placeholder="${target.toFixed(2)}" step="0.01">
+          <button class="confirm-btn" onclick="exitTrade()">Confirm</button>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-exit" onclick="exitTrade()">I exited — log at target price</button>
+      </div>`;
+  } else {
+    const enterDisabled = (inTrade || !canAfford || consecutiveLosses >= 3) ? 'disabled' : '';
+    const skipLabel = s.status === 'skipped' ? 'Unskip' : 'Skip';
+    actionHtml = `
+      <div class="btn-row">
+        <button class="btn-enter" onclick="enterTrade()" ${enterDisabled}>Enter this trade</button>
+        <button class="btn-neutral" onclick="toggleSkip()">${skipLabel}</button>
+      </div>`;
+  }
+
+  document.getElementById('sig-body').innerHTML = `
+<div class="card">
+  ${topBadge}
+  ${topBanner}
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+    <div>
+      <div style="font-size:26px;font-weight:700;color:var(--text)">${s.ticker}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:2px">${s.name}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:3px">Gap +${s.gap.toFixed(1)}% · PM vol ${s.pmVol} (${s.pmVolX}x avg)</div>
+    </div>
+    <div class="score-pill s${s.score}">${s.score}/5 setup</div>
+  </div>
+  <div class="price-grid">
+    <div class="price-box">
+      <div class="label">Buy at</div>
+      <div class="price-val entry">$${entry.toFixed(2)}</div>
+      <div class="price-sub">${sh} shares · $${cost.toFixed(0)} total</div>
+    </div>
+    <div class="price-box">
+      <div class="label">Stop loss</div>
+      <div class="price-val stop">$${stopPrice.toFixed(2)}</div>
+      <div class="price-sub">Max risk $${actualRisk.toFixed(2)}</div>
+    </div>
+    <div class="price-box">
+      <div class="label">Target</div>
+      <div class="price-val target">$${target.toFixed(2)}</div>
+      <div class="price-sub">Max gain $${maxGain.toFixed(2)}</div>
+    </div>
+  </div>
+  <div class="cond-row">${condHtml}</div>
+  <div class="news-box">${s.news}</div>
+  ${actionHtml}
+</div>`;
+}
+
+function enterTrade() {
+  if (inTrade || consecutiveLosses >= 3) return;
+  const s = signals[activeIdx];
+  const { cost } = calcPos(s.price, s.stop);
+  if (cost > capitalLeft) return;
+  inTrade = true;
+  inTradeIdx = activeIdx;
+  signals[activeIdx].status = 'inplay';
+  capitalLeft = +(capitalLeft - cost).toFixed(2);
+  updateStats();
+  renderTabs();
+  renderSignal();
+}
+
+function exitTrade() {
+  const s = signals[inTradeIdx];
+  const { sh, cost } = calcPos(s.price, s.stop);
+  const target = +(s.price + s.stop * RR).toFixed(2);
+  const input = document.getElementById('exit-price');
+  let exitPrice = input ? parseFloat(input.value) : NaN;
+  if (isNaN(exitPrice) || exitPrice <= 0) exitPrice = target;
+
+  const pnl = +((exitPrice - s.price) * sh).toFixed(2);
+  sessionPnl = +(sessionPnl + pnl).toFixed(2);
+  capitalLeft = +(capitalLeft + cost + pnl).toFixed(2);
+
+  if (pnl > 0) { wins++; consecutiveLosses = 0; }
+  else { losses++; consecutiveLosses++; }
+
+  history.push({ ticker: s.ticker, entry: s.price, exit: exitPrice, shares: sh, pnl, cost });
+  signals[inTradeIdx].status = 'traded';
+  inTrade = false;
+  inTradeIdx = null;
+
+  updateStats();
+  updateAnalysis();
+  renderTabs();
+  renderSignal();
+  renderHistoryCard();
+}
+
+function toggleSkip() {
+  const s = signals[activeIdx];
+  if (s.status === 'skipped') s.status = 'ready';
+  else if (s.status === 'ready') s.status = 'skipped';
+  renderTabs();
+  renderSignal();
+}
+
+function doRefresh() {
+  signals = BASE_SIGNALS.map((s, i) => ({
+    ...s,
+    status: signals[i] && signals[i].status === 'traded' ? 'traded' : 'ready'
+  }));
+  countdown = 300;
+  renderTabs();
+  renderSignal();
+}
+
+function updateStats() {
+  const el = document.getElementById('s-pnl');
+  el.textContent = (sessionPnl >= 0 ? '+' : '') + '$' + Math.abs(sessionPnl).toFixed(2);
+  el.className = 'stat-val ' + (sessionPnl > 0 ? 'pos' : sessionPnl < 0 ? 'neg' : '');
+  const capEl = document.getElementById('s-cap');
+  capEl.textContent = '$' + capitalLeft.toFixed(0);
+  capEl.className = 'stat-val ' + (capitalLeft < 900 ? 'neg' : '');
+  document.getElementById('s-wins').textContent = wins;
+  document.getElementById('s-loss').textContent = losses;
+}
+
+function updateAnalysis() {
+  const total = history.length;
+  const wonTrades = history.filter(h => h.pnl > 0);
+  const lostTrades = history.filter(h => h.pnl <= 0);
+
+  document.getElementById('a-wr').textContent = total > 0 ? Math.round((wins / total) * 100) + '%' : '—';
+  document.getElementById('a-wr-sub').textContent = total > 0 ? `${wins} wins from ${total} trades` : 'No trades yet';
+
+  const avgWin = wonTrades.length > 0 ? wonTrades.reduce((s, h) => s + h.pnl, 0) / wonTrades.length : 0;
+  const avgLoss = lostTrades.length > 0 ? Math.abs(lostTrades.reduce((s, h) => s + h.pnl, 0) / lostTrades.length) : 0;
+  document.getElementById('a-avgwin').textContent = wonTrades.length > 0 ? '+$' + avgWin.toFixed(2) : '—';
+  document.getElementById('a-avgloss').textContent = lostTrades.length > 0 ? '-$' + avgLoss.toFixed(2) : '—';
+
+  const wr = total > 0 ? wins / total : 0;
+  const expectancy = total > 0 ? (wr * avgWin) - ((1 - wr) * avgLoss) : 0;
+  const expEl = document.getElementById('a-exp');
+  expEl.textContent = total > 0 ? (expectancy >= 0 ? '+' : '') + '$' + expectancy.toFixed(2) : '—';
+  expEl.className = 'analysis-val ' + (expectancy > 0 ? 'pos' : expectancy < 0 ? 'neg' : '');
+
+  const streakBar = document.getElementById('streak-bar');
+  if (history.length === 0) {
+    streakBar.innerHTML = '<div style="font-size:12px;color:var(--text3)">No trades yet</div>';
+  } else {
+    streakBar.innerHTML = history.map(h =>
+      `<div class="streak-dot ${h.pnl > 0 ? 'streak-w' : 'streak-l'}">${h.pnl > 0 ? 'W' : 'L'}</div>`
+    ).join('');
+  }
+
+  const riskUsed = Math.max(0, CAPITAL - capitalLeft);
+  const riskPct = Math.round((riskUsed / CAPITAL) * 100);
+  document.getElementById('a-risk-pct').textContent = riskPct + '%';
+  document.getElementById('a-consec').textContent = consecutiveLosses;
+  const consecSub = document.getElementById('a-consec-sub');
+  if (consecutiveLosses >= 3) { consecSub.textContent = 'Stop trading tonight'; consecSub.style.color = 'var(--red)'; }
+  else if (consecutiveLosses === 2) { consecSub.textContent = 'One more loss — consider stopping'; consecSub.style.color = 'var(--amber)'; }
+  else { consecSub.textContent = 'You are fine'; consecSub.style.color = 'var(--text3)'; }
+
+  const capHealth = Math.max(0, Math.min(100, (capitalLeft / CAPITAL) * 100));
+  const ruin = document.getElementById('ruin-fill');
+  ruin.style.width = capHealth + '%';
+  ruin.style.background = capHealth > 70 ? 'var(--green-mid)' : capHealth > 40 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('a-cap-label').textContent = '$' + capitalLeft.toFixed(0) + ' remaining';
+
+  const saved = JSON.parse(localStorage.getItem('orb_sessions') || '[]');
+  const allTrades = saved.reduce((s, sess) => s + sess.trades.length, 0) + history.length;
+  const allPnl = saved.reduce((s, sess) => s + sess.pnl, 0) + sessionPnl;
+  const allWins = saved.reduce((s, sess) => s + sess.wins, 0) + wins;
+  document.getElementById('a-sessions').textContent = saved.length;
+  const apEl = document.getElementById('a-total-pnl');
+  apEl.textContent = (allPnl >= 0 ? '+' : '') + '$' + Math.abs(allPnl).toFixed(2);
+  apEl.className = 'analysis-val ' + (allPnl > 0 ? 'pos' : allPnl < 0 ? 'neg' : '');
+  document.getElementById('a-total-wr').textContent = allTrades > 0 ? Math.round((allWins / allTrades) * 100) + '%' : '—';
+  document.getElementById('a-total-trades').textContent = allTrades;
+}
+
+function renderHistoryCard() {
+  const card = document.getElementById('hist-card');
+  const list = document.getElementById('hist-list');
+  if (history.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  list.innerHTML = history.map(h => {
+    const cls = h.pnl >= 0 ? 'pos' : 'neg';
+    const pnlStr = (h.pnl >= 0 ? '+' : '') + '$' + Math.abs(h.pnl).toFixed(2);
+    return `<div class="hist-row">
+      <div>
+        <div class="hist-ticker">${h.ticker}</div>
+        <div class="hist-meta">In $${h.entry.toFixed(2)} · Out $${h.exit.toFixed(2)} · ${h.shares} shares · deployed $${h.cost.toFixed(0)}</div>
+      </div>
+      <div class="hist-pnl ${cls}">${pnlStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPastSessions() {
+  const saved = JSON.parse(localStorage.getItem('orb_sessions') || '[]');
+  const list = document.getElementById('history-list');
+  if (saved.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:2rem;font-size:13px;color:var(--text3)">No past sessions yet.</div>';
+    return;
+  }
+  list.innerHTML = [...saved].reverse().map(sess => {
+    const pnlStr = (sess.pnl >= 0 ? '+' : '') + '$' + Math.abs(sess.pnl).toFixed(2);
+    const pnlCls = sess.pnl >= 0 ? 'pos' : 'neg';
+    const wr = sess.trades.length > 0 ? Math.round((sess.wins / sess.trades.length) * 100) : 0;
+    const tradeRows = sess.trades.map(h => {
+      const ps = (h.pnl >= 0 ? '+' : '') + '$' + Math.abs(h.pnl).toFixed(2);
+      return `<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--text2)">
+        <span>${h.ticker} · In $${h.entry.toFixed(2)} → Out $${h.exit.toFixed(2)} · ${h.shares} sh</span>
+        <span style="font-weight:600;color:${h.pnl >= 0 ? 'var(--green)' : 'var(--red)'}">${ps}</span>
+      </div>`;
+    }).join('');
+    return `<div class="history-session">
+      <div class="session-header">
+        <div class="session-date">${sess.date} · ${sess.trades.length} trades · ${wr}% win rate</div>
+        <div class="session-pnl ${pnlCls}">${pnlStr}</div>
+      </div>
+      ${tradeRows}
+    </div>`;
+  }).join('');
+}
+
+function endSession() {
+  if (history.length === 0) { alert('No trades to save yet.'); return; }
+  const saved = JSON.parse(localStorage.getItem('orb_sessions') || '[]');
+  saved.push({
+    date: new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }),
+    pnl: sessionPnl,
+    wins,
+    trades: history
+  });
+  localStorage.setItem('orb_sessions', JSON.stringify(saved));
+  sessionPnl = 0; capitalLeft = CAPITAL; wins = 0; losses = 0;
+  history = []; consecutiveLosses = 0;
+  signals = BASE_SIGNALS.map(s => ({ ...s, status: 'ready' }));
+  inTrade = false; inTradeIdx = null;
+  updateStats(); updateAnalysis(); renderTabs(); renderSignal();
+  renderHistoryCard(); renderPastSessions();
+  alert('Session saved. Starting fresh.');
+}
+
+function clearAllData() {
+  localStorage.removeItem('orb_sessions');
+  renderPastSessions(); updateAnalysis();
+}
+
+function toggleCheck(item) {
+  const box = item.querySelector('.check-box');
+  box.classList.toggle('checked');
+  updateCheckScore();
+}
+
+function updateCheckScore() {
+  const total = document.querySelectorAll('#page-checklist .check-box.checked').length;
+  document.getElementById('check-count').textContent = total;
+  const v = document.getElementById('checklist-verdict');
+  if (total === 5) { v.textContent = 'Ready to trade tonight'; v.className = 'verdict go'; }
+  else if (total >= 3) { v.textContent = 'Almost ready — complete remaining checks'; v.className = 'verdict maybe'; }
+  else { v.textContent = 'Not ready — complete the checklist'; v.className = 'verdict no'; }
+}
+
+function resetChecklist() {
+  document.querySelectorAll('#page-checklist .check-box').forEach(b => b.classList.remove('checked'));
+  document.getElementById('check-count').textContent = '0';
+  const v = document.getElementById('checklist-verdict');
+  v.textContent = 'Not ready — complete the checklist';
+  v.className = 'verdict no';
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'analysis') updateAnalysis();
+  if (name === 'history') renderPastSessions();
+}
+
+setInterval(() => {
+  countdown--;
+  const pct = Math.round((countdown / 300) * 100);
+  const fill = document.getElementById('timer-fill');
+  if (fill) fill.style.width = pct + '%';
+  const label = document.getElementById('next-refresh');
+  if (label) {
+    const m = Math.floor(countdown / 60);
+    const sc = countdown % 60;
+    label.textContent = 'Auto-refresh in ' + m + ':' + String(sc).padStart(2, '0');
+  }
+  if (countdown <= 0 && !inTrade) {
+    countdown = 300;
+    signals = BASE_SIGNALS.map((s, i) => ({
+      ...s, status: signals[i] && signals[i].status === 'traded' ? 'traded' : 'ready'
+    }));
+    renderTabs(); renderSignal();
+  }
+}, 1000);
+
+setInterval(() => {
+  const el = document.getElementById('clock');
+  if (el) el.textContent = new Date().toLocaleTimeString('en-SG', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Singapore'
+  }) + ' SGT';
+  renderMood();
+}, 1000);
+
+renderTabs();
+renderSignal();
+renderMood();
+updateAnalysis();
+renderPastSessions();
+loadSignalsJson();
+</script>
+</body>
+</html>
