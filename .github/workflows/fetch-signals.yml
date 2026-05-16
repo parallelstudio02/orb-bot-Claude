@@ -1,0 +1,39 @@
+name: Fetch Pre-Market Signals
+
+on:
+  schedule:
+    # 9:00 PM SGT = 13:00 UTC
+    - cron: '0 13 * * 1-5'
+  workflow_dispatch:
+    # Allows you to run it manually from GitHub by clicking a button
+
+jobs:
+  fetch-signals:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run signal fetcher
+        env:
+          ALPACA_KEY: ${{ secrets.ALPACA_KEY }}
+          ALPACA_SECRET: ${{ secrets.ALPACA_SECRET }}
+          NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
+        run: python fetch_signals.py
+
+      - name: Commit and push signals.json
+        run: |
+          git config user.name "orb-bot"
+          git config user.email "orb-bot@users.noreply.github.com"
+          git add signals.json
+          git diff --staged --quiet || git commit -m "signals update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
